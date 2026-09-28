@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Operations Dashboard')}"></head>
+<body>
+
+<!-- Sidebar -->
+<div th:replace="~{fragments/layout :: sidebar('dashboard')}"></div>
+
+<!-- Main Wrapper -->
+<div class="main-wrapper">
+    <div th:replace="~{fragments/layout :: topbar('Operations Dashboard', 'Real-time metrics, stock alerts, and last-mile logistics')}"></div>
+
+    <main class="content-container">
+        <!-- Flash messages -->
+        <div th:if="${successMessage}" class="alert alert-success">
+            <span th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger">
+            <span th:text="${errorMessage}"></span>
+        </div>
+
+        <!-- KPI Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card blue">
+                <div class="stat-icon"><i class="fa-solid fa-boxes-packing"></i></div>
+                <div class="stat-info">
+                    <h3 th:text="${totalSuppliers}">0</h3>
+                    <p>Total Suppliers</p>
+                </div>
+            </div>
+
+            <div class="stat-card cyan">
+                <div class="stat-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+                <div class="stat-info">
+                    <h3 th:text="${totalProducts}">0</h3>
+                    <p>Total Products</p>
+                </div>
+            </div>
+
+            <div class="stat-card green">
+                <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+                <div class="stat-info">
+                    <h3 th:text="${totalCustomers}">0</h3>
+                    <p>Total Customers</p>
+                </div>
+            </div>
+
+            <div class="stat-card blue">
+                <div class="stat-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                <div class="stat-info">
+                    <h3 th:text="${totalOrders}">0</h3>
+                    <p>Total Orders</p>
+                </div>
+            </div>
+
+            <div class="stat-card amber">
+                <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
+                <div class="stat-info">
+                    <h3 th:text="${pendingOrders}">0</h3>
+                    <p>Pending Orders</p>
+                </div>
+            </div>
+
+            <div class="stat-card amber">
+                <div class="stat-icon"><i class="fa-solid fa-truck"></i></div>
+                <div class="stat-info">
+                    <h3 th:text="${pendingDeliveries}">0</h3>
+                    <p>Pending Deliveries</p>
+                </div>
+            </div>
+
+            <div class="stat-card green">
+                <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+                <div class="stat-info">
+                    <h3 th:text="${completedDeliveries}">0</h3>
+                    <p>Completed Deliveries</p>
+                </div>
+            </div>
+
+            <div class="stat-card red">
+                <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div class="stat-info">
+                    <h3 th:text="${lowStockCount}">0</h3>
+                    <p>Low Stock Alerts</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Low Stock Warning Banner if any -->
+        <div th:if="${lowStockCount > 0}" class="alert alert-warning">
+            <div>
+                <strong><i class="fa-solid fa-triangle-exclamation"></i> Stock Alert:</strong>
+                <span th:text="${lowStockCount} + ' product(s) have reached or fallen below minimum stock thresholds!'"></span>
+            </div>
+            <a th:href="@{/products?lowStockOnly=true}" class="btn btn-secondary btn-sm">View Low Stock</a>
+        </div>
+
+        <!-- 2 Columns Grid for Dashboard Details -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 24px;">
+            
+            <!-- Recent Orders Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-receipt" style="color:var(--primary);"></i> Recent Customer Orders</h2>
+                    <a th:href="@{/orders}" class="btn btn-secondary btn-sm">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="ord : ${recentOrders}">
+                                <td><strong th:text="'#' + ${ord.id}">#1</strong></td>
+                                <td th:text="${ord.customer.name}">Customer Name</td>
+                                <td th:text="${#temporals.format(ord.orderDate, 'dd-MMM HH:mm')}">Date</td>
+                                <td><strong th:text="'₹' + ${#numbers.formatDecimal(ord.totalAmount, 1, 2)}">₹0.00</strong></td>
+                                <td>
+                                    <span class="badge" 
+                                          th:classappend="${ord.status.name() == 'PLACED'} ? 'badge-placed' : 
+                                                          (${ord.status.name() == 'CONFIRMED'} ? 'badge-confirmed' : 
+                                                          (${ord.status.name() == 'DELIVERED'} ? 'badge-delivered' : 'badge-cancelled'))"
+                                          th:text="${ord.status}">PLACED</span>
+                                </td>
+                                <td>
+                                    <a th:href="@{/orders/{id}(id=${ord.id})}" class="btn btn-secondary btn-sm">Details</a>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(recentOrders)}">
+                                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">No recent orders.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pending Deliveries Card with Route Trigger -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-truck-fast" style="color:var(--warning);"></i> Pending Last-Mile Deliveries</h2>
+                    <a th:href="@{/routes}" class="btn btn-success btn-sm"><i class="fa-solid fa-route"></i> Optimize Route</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Delivery #</th>
+                                <th>Order #</th>
+                                <th>Customer Destination</th>
+                                <th>Distance</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="del : ${pendingDeliveriesList}">
+                                <td><strong th:text="'#' + ${del.id}">#1</strong></td>
+                                <td><a th:href="@{/orders/{id}(id=${del.order.id})}" th:text="'Order #' + ${del.order.id}">#1</a></td>
+                                <td>
+                                    <div th:text="${del.order.customer.name}" style="font-weight:600;">Customer</div>
+                                    <div style="font-size:11px;color:var(--text-muted);" th:text="${del.order.customer.city}">City</div>
+                                </td>
+                                <td th:text="${del.distance} + ' km'">0 km</td>
+                                <td>
+                                    <span class="badge badge-pending" th:text="${del.status}">PENDING</span>
+                                </td>
+                                <td>
+                                    <a th:href="@{/deliveries/{id}(id=${del.id})}" class="btn btn-secondary btn-sm">View</a>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(pendingDeliveriesList)}">
+                                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">No pending deliveries to dispatch.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Low Stock Table Card -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-box-open" style="color:var(--danger);"></i> Low-Stock Critical Inventory Alert (Stock &le; Threshold)</h2>
+                    <a th:href="@{/products/new}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Add Product</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Category</th>
+                                <th>Current Stock</th>
+                                <th>Minimum Threshold</th>
+                                <th>Deficit</th>
+                                <th>Supplier Contact</th>
+                                <th>Quick Restock</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="prod : ${lowStockProducts}">
+                                <td><strong th:text="${prod.name}">Product</strong></td>
+                                <td th:text="${prod.category}">Category</td>
+                                <td>
+                                    <span class="badge badge-low-stock" th:text="${prod.stockQuantity} + ' units'">0</span>
+                                </td>
+                                <td th:text="${prod.minimumStock} + ' units'">0</td>
+                                <td style="color:var(--danger);font-weight:700;" th:text="${prod.minimumStock - prod.stockQuantity} + ' units'">0</td>
+                                <td>
+                                    <span th:if="${prod.supplier != null}" th:text="${prod.supplier.name} + ' (' + ${prod.supplier.phone} + ')'">Supplier</span>
+                                    <span th:unless="${prod.supplier != null}" style="color:var(--text-muted);">-</span>
+                                </td>
+                                <td>
+                                    <form th:action="@{/products/{id}/stock(id=${prod.id})}" method="post" style="display:inline-flex;gap:6px;">
+                                        <input type="hidden" name="change" value="20" />
+                                        <button type="submit" class="btn btn-secondary btn-sm" title="Add 20 units">+20 Units</button>
+                                    </form>
+                                    <form th:action="@{/products/{id}/stock(id=${prod.id})}" method="post" style="display:inline-flex;gap:6px;">
+                                        <input type="hidden" name="change" value="50" />
+                                        <button type="submit" class="btn btn-secondary btn-sm" title="Add 50 units">+50 Units</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(lowStockProducts)}">
+                                <td colspan="7" style="text-align: center; color: var(--success); padding: 24px; font-weight:600;">
+                                    <i class="fa-solid fa-circle-check"></i> All products are healthy above their minimum stock thresholds!
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

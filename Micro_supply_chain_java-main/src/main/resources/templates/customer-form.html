@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head(${pageTitle})}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: sidebar('customers')}"></div>
+
+<div class="main-wrapper">
+    <div th:replace="~{fragments/layout :: topbar(${pageTitle}, 'Provide customer contact and delivery geolocation coordinates')}"></div>
+
+    <main class="content-container">
+        <div class="card" style="max-width: 850px; margin: 0 auto;">
+            <div class="card-header">
+                <h2><i class="fa-solid fa-user-tag" style="color:var(--primary);"></i> <span th:text="${pageTitle}">Customer Form</span></h2>
+                <a th:href="@{/customers}" class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Back to Customers</a>
+            </div>
+            <div class="card-body">
+                <form th:action="${customer.id == null} ? @{/customers} : @{/customers/update/{id}(id=${customer.id})}"
+                      th:object="${customer}" method="post">
+
+                    <input type="hidden" th:field="*{id}" />
+
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label class="form-label">Customer / Retailer Name *</label>
+                            <input type="text" th:field="*{name}" class="form-control" th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''" placeholder="e.g. Ramesh Kumar (Supermarket)" required />
+                            <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="form-error"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Phone Number *</label>
+                            <input type="text" th:field="*{phone}" class="form-control" th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid' : ''" placeholder="e.g. +91 91234 56789" required />
+                            <span th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}" class="form-error"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Email Address *</label>
+                            <input type="email" th:field="*{email}" class="form-control" th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''" placeholder="e.g. customer@domain.com" required />
+                            <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="form-error"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">City *</label>
+                            <input type="text" th:field="*{city}" class="form-control" th:classappend="${#fields.hasErrors('city')} ? 'is-invalid' : ''" placeholder="e.g. Bengaluru" required />
+                            <span th:if="${#fields.hasErrors('city')}" th:errors="*{city}" class="form-error"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Destination Latitude (GPS) *</label>
+                            <input type="number" step="0.000001" th:field="*{latitude}" class="form-control" th:classappend="${#fields.hasErrors('latitude')} ? 'is-invalid' : ''" placeholder="e.g. 12.9560" required />
+                            <span th:if="${#fields.hasErrors('latitude')}" th:errors="*{latitude}" class="form-error"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Destination Longitude (GPS) *</label>
+                            <input type="number" step="0.000001" th:field="*{longitude}" class="form-control" th:classappend="${#fields.hasErrors('longitude')} ? 'is-invalid' : ''" placeholder="e.g. 77.5950" required />
+                            <span th:if="${#fields.hasErrors('longitude')}" th:errors="*{longitude}" class="form-error"></span>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label class="form-label">Detailed Delivery Address *</label>
+                            <textarea th:field="*{address}" class="form-control" rows="3" placeholder="Shop/House number, street name, locality" required></textarea>
+                            <span th:if="${#fields.hasErrors('address')}" th:errors="*{address}" class="form-error"></span>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-solid fa-floppy-disk"></i> Save Customer
+                            </button>
+                            <a th:href="@{/customers}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

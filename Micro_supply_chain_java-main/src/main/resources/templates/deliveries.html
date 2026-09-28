@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Deliveries Dispatch')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: sidebar('deliveries')}"></div>
+
+<div class="main-wrapper">
+    <div th:replace="~{fragments/layout :: topbar('Delivery Dispatch & Logistics', 'Monitor last-mile parcel dispatches and transit statuses')}"></div>
+
+    <main class="content-container">
+        <!-- Flash messages -->
+        <div th:if="${successMessage}" class="alert alert-success">
+            <span th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger">
+            <span th:text="${errorMessage}"></span>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fa-solid fa-truck-ramp-box" style="color:var(--primary);"></i> Deliveries Queue</h2>
+                <div style="display:flex;gap:10px;">
+                    <a th:href="@{/routes}" class="btn btn-success btn-sm">
+                        <i class="fa-solid fa-route"></i> Last-Mile Route Optimizer
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Status Filter Bar -->
+                <form th:action="@{/deliveries}" method="get" class="filter-bar">
+                    <select name="status" class="form-control" style="width: auto;">
+                        <option value="">All Delivery Statuses</option>
+                        <option th:each="st : ${statuses}" th:value="${st}" th:text="${st}" th:selected="${st == selectedStatus}"></option>
+                    </select>
+
+                    <button type="submit" class="btn btn-secondary btn-sm"><i class="fa-solid fa-filter"></i> Filter</button>
+                    <a th:if="${selectedStatus != null}" th:href="@{/deliveries}" class="btn btn-secondary btn-sm">Reset</a>
+                </form>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Delivery #</th>
+                                <th>Order #</th>
+                                <th>Customer & Address</th>
+                                <th>Distance</th>
+                                <th>Est. Transit Time</th>
+                                <th>Est. Cost</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="del : ${deliveries}">
+                                <td><strong th:text="'#' + ${del.id}">#1</strong></td>
+                                <td>
+                                    <a th:href="@{/orders/{id}(id=${del.order.id})}" th:text="'Order #' + ${del.order.id}">#1</a>
+                                </td>
+                                <td>
+                                    <strong th:text="${del.order.customer.name}">Customer Name</strong>
+                                    <div style="font-size:11px;color:var(--text-muted);" 
+                                         th:text="${del.order.customer.address} + ', ' + ${del.order.customer.city}">Address</div>
+                                </td>
+                                <td><span style="font-weight:600;" th:text="${del.distance} + ' km'">0 km</span></td>
+                                <td th:text="${del.estimatedTime} + ' mins'">0 mins</td>
+                                <td><strong th:text="'₹' + ${#numbers.formatDecimal(del.estimatedCost, 1, 2)}">₹0.00</strong></td>
+                                <td>
+                                    <span class="badge"
+                                          th:classappend="${del.status.name() == 'PENDING'} ? 'badge-pending' : 
+                                                          (${del.status.name() == 'ASSIGNED'} ? 'badge-assigned' : 
+                                                          (${del.status.name() == 'OUT_FOR_DELIVERY'} ? 'badge-out-for-delivery' : 'badge-delivered'))"
+                                          th:text="${del.status}">PENDING</span>
+                                </td>
+                                <td>
+                                    <a th:href="@{/deliveries/{id}(id=${del.id})}" class="btn btn-secondary btn-sm">
+                                        <i class="fa-solid fa-eye"></i> Details
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(deliveries)}">
+                                <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 32px;">No deliveries found.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div th:if="${totalPages > 1}" class="pagination">
+                    <a th:href="@{/deliveries(page=${currentPage - 1}, status=${selectedStatus})}"
+                       class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">Previous</a>
+
+                    <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                        <a th:href="@{/deliveries(page=${i}, status=${selectedStatus})}"
+                           class="page-item" th:classappend="${currentPage == i} ? 'active' : ''"
+                           th:text="${i + 1}">1</a>
+                    </th:block>
+
+                    <a th:href="@{/deliveries(page=${currentPage + 1}, status=${selectedStatus})}"
+                       class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled' : ''">Next</a>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

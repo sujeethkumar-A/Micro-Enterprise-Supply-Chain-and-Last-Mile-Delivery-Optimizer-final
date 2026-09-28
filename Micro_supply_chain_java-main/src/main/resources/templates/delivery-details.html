@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Delivery Details #' + ${delivery.id})}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: sidebar('deliveries')}"></div>
+
+<div class="main-wrapper">
+    <div th:replace="~{fragments/layout :: topbar('Delivery Details #' + ${delivery.id}, 'Dispatch parameters, transit time, and customer destination')}"></div>
+
+    <main class="content-container">
+        <!-- Flash messages -->
+        <div th:if="${successMessage}" class="alert alert-success">
+            <span th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger">
+            <span th:text="${errorMessage}"></span>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+            <a th:href="@{/deliveries}" class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Back to Deliveries</a>
+
+            <!-- Status Update Action Form -->
+            <form th:action="@{/deliveries/{id}/status(id=${delivery.id})}" method="post" style="display:flex;align-items:center;gap:10px;">
+                <label style="font-size:13px;font-weight:600;">Update Delivery Status:</label>
+                <select name="status" class="form-control" style="width:auto;padding:6px 12px;font-size:13px;">
+                    <option th:each="st : ${statuses}" th:value="${st}" th:text="${st}" th:selected="${st == delivery.status}"></option>
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm">Update</button>
+            </form>
+        </div>
+
+        <div style="display:grid;grid-template-columns: 1fr 1fr; gap:24px;">
+            
+            <!-- Delivery Metrics Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-truck" style="color:var(--primary);"></i> Logistics & Pricing Metrics</h2>
+                    <span class="badge"
+                          th:classappend="${delivery.status.name() == 'PENDING'} ? 'badge-pending' : 
+                                          (${delivery.status.name() == 'ASSIGNED'} ? 'badge-assigned' : 
+                                          (${delivery.status.name() == 'OUT_FOR_DELIVERY'} ? 'badge-out-for-delivery' : 'badge-delivered'))"
+                          th:text="${delivery.status}">PENDING</span>
+                </div>
+                <div class="card-body" style="display:flex;flex-direction:column;gap:16px;">
+                    <div>
+                        <span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;">Associated Order</span>
+                        <div>
+                            <a th:href="@{/orders/{id}(id=${delivery.order.id})}" style="font-size:16px;font-weight:700;color:var(--primary);">
+                                Order #<span th:text="${delivery.order.id}">1</span>
+                            </a>
+                            <span style="font-size:13px;color:var(--text-secondary);margin-left:8px;" 
+                                  th:text="'(Total: ₹' + ${#numbers.formatDecimal(delivery.order.totalAmount, 1, 2)} + ')'"></span>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns: repeat(3, 1fr);gap:12px;background:#f8fafc;padding:16px;border-radius:var(--radius-md);">
+                        <div>
+                            <span style="font-size:11px;color:var(--text-muted);display:block;">ONE-WAY DISTANCE</span>
+                            <strong style="font-size:18px;color:var(--text-primary);" th:text="${delivery.distance} + ' km'">0 km</strong>
+                        </div>
+                        <div>
+                            <span style="font-size:11px;color:var(--text-muted);display:block;">ESTIMATED TIME</span>
+                            <strong style="font-size:18px;color:var(--text-primary);" th:text="${delivery.estimatedTime} + ' mins'">0 mins</strong>
+                        </div>
+                        <div>
+                            <span style="font-size:11px;color:var(--text-muted);display:block;">DELIVERY COST</span>
+                            <strong style="font-size:18px;color:var(--success);" th:text="'₹' + ${#numbers.formatDecimal(delivery.estimatedCost, 1, 2)}">₹0.00</strong>
+                        </div>
+                    </div>
+
+                    <div>
+                        <span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;">Cost Calculation Formula</span>
+                        <p style="font-size:13px;color:var(--text-secondary);margin-top:4px;">
+                            <code>Base Cost (₹30) + [Distance (<span th:text="${delivery.distance}"></span> km) &times; ₹8/km] = ₹<span th:text="${delivery.estimatedCost}"></span></code>
+                        </p>
+                    </div>
+
+                    <div>
+                        <span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;">Scheduled Dispatch Date</span>
+                        <div style="font-size:14px;font-weight:600;" 
+                             th:text="${delivery.deliveryDate != null} ? ${#temporals.format(delivery.deliveryDate, 'dd-MMM-yyyy HH:mm')} : 'Not Set'">Date</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Destination Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-location-dot" style="color:var(--danger);"></i> Destination Customer</h2>
+                </div>
+                <div class="card-body" style="display:flex;flex-direction:column;gap:14px;">
+                    <div>
+                        <span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;">Recipient</span>
+                        <div style="font-size:15px;font-weight:600;" th:text="${delivery.order.customer.name}">Customer Name</div>
+                    </div>
+                    <div>
+                        <span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;">Contact Phone & Email</span>
+                        <div th:text="${delivery.order.customer.phone} + ' | ' + ${delivery.order.customer.email}">Contact</div>
+                    </div>
+                    <div>
+                        <span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;">Delivery Address</span>
+                        <div th:text="${delivery.order.customer.address} + ', ' + ${delivery.order.customer.city}">Address</div>
+                    </div>
+                    <div>
+                        <span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;">Geolocation Coordinates</span>
+                        <div><code th:text="${delivery.order.customer.latitude} + ', ' + ${delivery.order.customer.longitude}">12.9560, 77.5950</code></div>
+                    </div>
+                    <div style="margin-top:12px;">
+                        <a th:href="@{/routes}" class="btn btn-success btn-sm">
+                            <i class="fa-solid fa-route"></i> Add to Route Optimizer
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

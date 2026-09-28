@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Suppliers Directory')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: sidebar('suppliers')}"></div>
+
+<div class="main-wrapper">
+    <div th:replace="~{fragments/layout :: topbar('Suppliers Management', 'Manage raw material and product vendors')}"></div>
+
+    <main class="content-container">
+        <!-- Flash messages -->
+        <div th:if="${successMessage}" class="alert alert-success">
+            <span th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger">
+            <span th:text="${errorMessage}"></span>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fa-solid fa-boxes-packing" style="color:var(--primary);"></i> Suppliers Directory</h2>
+                <a th:href="@{/suppliers/new}" class="btn btn-primary btn-sm">
+                    <i class="fa-solid fa-plus"></i> Add Supplier
+                </a>
+            </div>
+            <div class="card-body">
+                <!-- Search & Filters -->
+                <form th:action="@{/suppliers}" method="get" class="filter-bar">
+                    <input type="text" name="search" th:value="${search}" placeholder="Search supplier by name..." class="form-control search-input" />
+                    <button type="submit" class="btn btn-secondary btn-sm"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+                    <a th:if="${search != null and !search.isEmpty()}" th:href="@{/suppliers}" class="btn btn-secondary btn-sm">Reset</a>
+                </form>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Supplier Name</th>
+                                <th>Contact Person</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Address</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="supplier : ${suppliers}">
+                                <td><strong th:text="'#' + ${supplier.id}">#1</strong></td>
+                                <td><strong th:text="${supplier.name}">Supplier Name</strong></td>
+                                <td th:text="${supplier.contactPerson}">Contact</td>
+                                <td th:text="${supplier.phone}">Phone</td>
+                                <td><a th:href="'mailto:' + ${supplier.email}" th:text="${supplier.email}">Email</a></td>
+                                <td th:text="${supplier.address}">Address</td>
+                                <td>
+                                    <div style="display:flex;gap:8px;">
+                                        <a th:href="@{/suppliers/edit/{id}(id=${supplier.id})}" class="btn btn-secondary btn-sm">
+                                            <i class="fa-solid fa-pen-to-square"></i> Edit
+                                        </a>
+                                        <a th:href="@{/suppliers/delete/{id}(id=${supplier.id})}"
+                                           onclick="return confirm('Are you sure you want to delete this supplier?');"
+                                           class="btn btn-danger btn-sm">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(suppliers)}">
+                                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 32px;">No suppliers found.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div th:if="${totalPages > 1}" class="pagination">
+                    <a th:href="@{/suppliers(page=${currentPage - 1}, search=${search})}"
+                       class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">Previous</a>
+
+                    <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                        <a th:href="@{/suppliers(page=${i}, search=${search})}"
+                           class="page-item" th:classappend="${currentPage == i} ? 'active' : ''"
+                           th:text="${i + 1}">1</a>
+                    </th:block>
+
+                    <a th:href="@{/suppliers(page=${currentPage + 1}, search=${search})}"
+                       class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled' : ''">Next</a>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

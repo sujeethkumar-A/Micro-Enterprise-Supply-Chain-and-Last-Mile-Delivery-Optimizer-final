@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- Head Fragment -->
+<head th:fragment="page-head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' - Micro-Enterprise Supply Chain'">Supply Chain & Delivery Optimizer</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+
+<!-- Sidebar Fragment -->
+<aside th:fragment="sidebar(activePage)" class="sidebar">
+    <div class="brand">
+        <div class="brand-icon">
+            <i class="fa-solid fa-truck-fast"></i>
+        </div>
+        <div class="brand-text">
+            <h2>MicroOptimizer</h2>
+            <span>Supply Chain & Routing</span>
+        </div>
+    </div>
+
+    <ul class="nav-menu">
+        <li class="nav-header">Overview</li>
+        <li>
+            <a th:href="@{/dashboard}" class="nav-link" th:classappend="${activePage == 'dashboard'} ? 'active' : ''">
+                <i class="fa-solid fa-chart-line icon"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+
+        <li class="nav-header">Supply Chain</li>
+        <li>
+            <a th:href="@{/suppliers}" class="nav-link" th:classappend="${activePage == 'suppliers'} ? 'active' : ''">
+                <i class="fa-solid fa-boxes-packing icon"></i>
+                <span>Suppliers</span>
+            </a>
+        </li>
+        <li>
+            <a th:href="@{/products}" class="nav-link" th:classappend="${activePage == 'products'} ? 'active' : ''">
+                <i class="fa-solid fa-boxes-stacked icon"></i>
+                <span>Products & Stock</span>
+            </a>
+        </li>
+        <li>
+            <a th:href="@{/customers}" class="nav-link" th:classappend="${activePage == 'customers'} ? 'active' : ''">
+                <i class="fa-solid fa-users icon"></i>
+                <span>Customers</span>
+            </a>
+        </li>
+
+        <li class="nav-header">Order & Logistics</li>
+        <li>
+            <a th:href="@{/orders}" class="nav-link" th:classappend="${activePage == 'orders'} ? 'active' : ''">
+                <i class="fa-solid fa-cart-shopping icon"></i>
+                <span>Customer Orders</span>
+            </a>
+        </li>
+        <li>
+            <a th:href="@{/deliveries}" class="nav-link" th:classappend="${activePage == 'deliveries'} ? 'active' : ''">
+                <i class="fa-solid fa-truck-ramp-box icon"></i>
+                <span>Deliveries</span>
+            </a>
+        </li>
+        <li>
+            <a th:href="@{/routes}" class="nav-link" th:classappend="${activePage == 'routes'} ? 'active' : ''">
+                <i class="fa-solid fa-route icon"></i>
+                <span>Route Optimizer</span>
+                <span class="nav-badge" style="background:#10b981;font-weight:700;">Nearest-N</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="sidebar-footer">
+        <p><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> MySQL Connected</p>
+        <span style="font-size:11px;">College LEAP Project 12</span>
+    </div>
+</aside>
+
+<!-- Topbar Fragment -->
+<header th:fragment="topbar(pageHeading, pageSubheading)" class="topbar">
+    <div class="topbar-title">
+        <h1 th:text="${pageHeading}">Dashboard</h1>
+        <p th:text="${pageSubheading}">Overview of inventory, orders, and delivery logistics</p>
+    </div>
+    <div class="topbar-actions">
+        <a th:href="@{/orders/new}" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-plus"></i> New Order
+        </a>
+        <a th:href="@{/routes}" class="btn btn-success btn-sm">
+            <i class="fa-solid fa-route"></i> Plan Route
+        </a>
+    </div>
+</header>
+
+<!-- Footer Scripts Fragment -->
+<div th:fragment="scripts">
+    <script th:src="@{/js/script.js}"></script>
+</div>
+
+</body>
+</html>

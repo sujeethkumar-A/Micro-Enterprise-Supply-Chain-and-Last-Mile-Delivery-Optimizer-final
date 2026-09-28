@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Products & Stock Inventory')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: sidebar('products')}"></div>
+
+<div class="main-wrapper">
+    <div th:replace="~{fragments/layout :: topbar('Products & Inventory', 'Track catalog items, stock quantities, and low-inventory warnings')}"></div>
+
+    <main class="content-container">
+        <!-- Flash messages -->
+        <div th:if="${successMessage}" class="alert alert-success">
+            <span th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger">
+            <span th:text="${errorMessage}"></span>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fa-solid fa-boxes-stacked" style="color:var(--primary);"></i> Products Inventory</h2>
+                <div style="display:flex;gap:10px;">
+                    <a th:href="@{/products(lowStockOnly=${!lowStockOnly})}" 
+                       class="btn btn-sm" th:classappend="${lowStockOnly} ? 'btn-danger' : 'btn-secondary'">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span th:text="${lowStockOnly} ? 'Show All Products' : 'Filter Low Stock Only'">Filter Low Stock</span>
+                    </a>
+                    <a th:href="@{/products/new}" class="btn btn-primary btn-sm">
+                        <i class="fa-solid fa-plus"></i> Add Product
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Search & Filters -->
+                <form th:action="@{/products}" method="get" class="filter-bar">
+                    <input type="text" name="search" th:value="${search}" placeholder="Search product name..." class="form-control search-input" />
+                    
+                    <select name="category" class="form-control" style="width: auto;">
+                        <option value="">All Categories</option>
+                        <option th:each="cat : ${categories}" th:value="${cat}" th:text="${cat}" th:selected="${cat == selectedCategory}"></option>
+                    </select>
+
+                    <button type="submit" class="btn btn-secondary btn-sm"><i class="fa-solid fa-filter"></i> Apply Filter</button>
+                    <a th:if="${(search != null and !search.isEmpty()) or (selectedCategory != null and !selectedCategory.isEmpty()) or lowStockOnly}" 
+                       th:href="@{/products}" class="btn btn-secondary btn-sm">Reset</a>
+                </form>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Product Name</th>
+                                <th>Category</th>
+                                <th>Unit Price</th>
+                                <th>Current Stock</th>
+                                <th>Min Threshold</th>
+                                <th>Stock Status</th>
+                                <th>Supplier</th>
+                                <th>Quick Stock</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="prod : ${products}">
+                                <td><strong th:text="'#' + ${prod.id}">#1</strong></td>
+                                <td>
+                                    <strong th:text="${prod.name}">Product</strong>
+                                    <div th:if="${prod.description != null}" th:text="${prod.description}" style="font-size:11px;color:var(--text-muted);"></div>
+                                </td>
+                                <td><span style="background:#f1f5f9;padding:3px 8px;border-radius:4px;font-size:12px;" th:text="${prod.category}">Category</span></td>
+                                <td><strong th:text="'₹' + ${#numbers.formatDecimal(prod.price, 1, 2)}">₹0.00</strong></td>
+                                <td>
+                                    <strong th:text="${prod.stockQuantity} + ' units'">0</strong>
+                                </td>
+                                <td th:text="${prod.minimumStock} + ' units'">0</td>
+                                <td>
+                                    <span th:if="${prod.isLowStock()}" class="badge badge-low-stock">
+                                        <i class="fa-solid fa-triangle-exclamation"></i> Low Stock
+                                    </span>
+                                    <span th:unless="${prod.isLowStock()}" class="badge badge-in-stock">
+                                        <i class="fa-solid fa-check"></i> Healthy
+                                    </span>
+                                </td>
+                                <td>
+                                    <span th:if="${prod.supplier != null}" th:text="${prod.supplier.name}">Supplier</span>
+                                    <span th:unless="${prod.supplier != null}" style="color:var(--text-muted);">-</span>
+                                </td>
+                                <td>
+                                    <div style="display:flex;gap:4px;">
+                                        <form th:action="@{/products/{id}/stock(id=${prod.id})}" method="post">
+                                            <input type="hidden" name="change" value="-1" />
+                                            <button type="submit" class="btn btn-secondary btn-sm" title="Decrease 1">-1</button>
+                                        </form>
+                                        <form th:action="@{/products/{id}/stock(id=${prod.id})}" method="post">
+                                            <input type="hidden" name="change" value="10" />
+                                            <button type="submit" class="btn btn-secondary btn-sm" title="Add 10">+10</button>
+                                        </form>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="display:flex;gap:6px;">
+                                        <a th:href="@{/products/edit/{id}(id=${prod.id})}" class="btn btn-secondary btn-sm" title="Edit">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </a>
+                                        <a th:href="@{/products/delete/{id}(id=${prod.id})}"
+                                           onclick="return confirm('Delete this product?');"
+                                           class="btn btn-danger btn-sm" title="Delete">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(products)}">
+                                <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 32px;">No products match criteria.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div th:if="${totalPages > 1 and !lowStockOnly}" class="pagination">
+                    <a th:href="@{/products(page=${currentPage - 1}, search=${search}, category=${selectedCategory})}"
+                       class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">Previous</a>
+
+                    <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                        <a th:href="@{/products(page=${i}, search=${search}, category=${selectedCategory})}"
+                           class="page-item" th:classappend="${currentPage == i} ? 'active' : ''"
+                           th:text="${i + 1}">1</a>
+                    </th:block>
+
+                    <a th:href="@{/products(page=${currentPage + 1}, search=${search}, category=${selectedCategory})}"
+                       class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled' : ''">Next</a>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

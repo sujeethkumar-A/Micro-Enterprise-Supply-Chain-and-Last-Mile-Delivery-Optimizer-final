@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: page-head('Customers Directory')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: sidebar('customers')}"></div>
+
+<div class="main-wrapper">
+    <div th:replace="~{fragments/layout :: topbar('Customer Management', 'Manage customer profiles and GPS coordinates for delivery routing')}"></div>
+
+    <main class="content-container">
+        <!-- Flash messages -->
+        <div th:if="${successMessage}" class="alert alert-success">
+            <span th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger">
+            <span th:text="${errorMessage}"></span>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fa-solid fa-users" style="color:var(--primary);"></i> Customer Directory</h2>
+                <a th:href="@{/customers/new}" class="btn btn-primary btn-sm">
+                    <i class="fa-solid fa-user-plus"></i> Add Customer
+                </a>
+            </div>
+            <div class="card-body">
+                <!-- Search & Filters -->
+                <form th:action="@{/customers}" method="get" class="filter-bar">
+                    <input type="text" name="search" th:value="${search}" placeholder="Search customer by name..." class="form-control search-input" />
+                    <button type="submit" class="btn btn-secondary btn-sm"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+                    <a th:if="${search != null and !search.isEmpty()}" th:href="@{/customers}" class="btn btn-secondary btn-sm">Reset</a>
+                </form>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Customer Name</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Delivery Address</th>
+                                <th>City</th>
+                                <th>GPS Coordinates (Lat, Lon)</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="customer : ${customers}">
+                                <td><strong th:text="'#' + ${customer.id}">#1</strong></td>
+                                <td><strong th:text="${customer.name}">Customer Name</strong></td>
+                                <td th:text="${customer.phone}">Phone</td>
+                                <td><a th:href="'mailto:' + ${customer.email}" th:text="${customer.email}">Email</a></td>
+                                <td th:text="${customer.address}">Address</td>
+                                <td><span style="background:#e0f2fe;color:#0369a1;padding:3px 8px;border-radius:4px;font-size:12px;" th:text="${customer.city}">City</span></td>
+                                <td>
+                                    <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:12px;" 
+                                          th:text="${customer.latitude} + ', ' + ${customer.longitude}">12.9716, 77.5946</code>
+                                </td>
+                                <td>
+                                    <div style="display:flex;gap:6px;">
+                                        <a th:href="@{/customers/edit/{id}(id=${customer.id})}" class="btn btn-secondary btn-sm" title="Edit">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </a>
+                                        <a th:href="@{/customers/delete/{id}(id=${customer.id})}"
+                                           onclick="return confirm('Delete this customer?');"
+                                           class="btn btn-danger btn-sm" title="Delete">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(customers)}">
+                                <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 32px;">No customers found.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div th:if="${totalPages > 1}" class="pagination">
+                    <a th:href="@{/customers(page=${currentPage - 1}, search=${search})}"
+                       class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">Previous</a>
+
+                    <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                        <a th:href="@{/customers(page=${i}, search=${search})}"
+                           class="page-item" th:classappend="${currentPage == i} ? 'active' : ''"
+                           th:text="${i + 1}">1</a>
+                    </th:block>
+
+                    <a th:href="@{/customers(page=${currentPage + 1}, search=${search})}"
+                       class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled' : ''">Next</a>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>
